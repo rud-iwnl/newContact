@@ -10,11 +10,6 @@ app.use(cors());
 // Отдача статики фронта
 app.use(express.static(path.join(__dirname, '../public')));
 
-// SPA fallback (после всех остальных маршрутов)
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../public/index.html'));
-});
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -345,4 +340,9 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
+});
+
+// SPA fallback (последний маршрут!)
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../public/index.html'));
 });
