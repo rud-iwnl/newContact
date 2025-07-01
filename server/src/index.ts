@@ -132,9 +132,7 @@ io.on('connection', (socket) => {
   });
 
   // Тестовое событие
-  socket.on('ping', (cb) => {
-    cb('pong');
-  });
+  socket.on('ping', (cb) => cb('pong'));
 
   socket.on('startGame', ({ code }, cb) => {
     console.log('startGame called', code, socket.id);
