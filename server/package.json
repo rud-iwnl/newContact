@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev src/index.ts",
-    "build": "tsc && cd ../client && npm install && npm run build && cp -r dist/* ../server/public/",
+    "build": "tsc && mkdir -p ../server/public && cd ../client && npm install && npm run build && cp -r dist/* ../server/public/",
     "start": "node dist/index.js"
   },
   "keywords": [],
