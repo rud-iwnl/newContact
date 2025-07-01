@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 import Lobby from './components/Lobby';
 import Game from './components/Game';
 import Chat from './components/Chat';
+import path from 'path';
 
 const getInitialTheme = () => {
   if (typeof window !== "undefined") {
@@ -152,7 +153,7 @@ export default function App() {
     let socket = socketRef.current;
     if (screen === 'lobby') {
       if (!socket) {
-        socket = io('http://localhost:4000');
+        socket = io();
         socketRef.current = socket;
       }
       if (socket != null) {
@@ -293,7 +294,7 @@ export default function App() {
     setError(null);
     if (!nickname) return setError("Введите никнейм");
     if (mode === "join" && !lobbyCode) return setError("Введите код лобби");
-    const socket = socketRef.current || io('http://localhost:4000');
+    const socket = socketRef.current || io();
     socketRef.current = socket;
     socket.on('connect', () => setSocketStatus('connected'));
     socket.on('disconnect', () => setSocketStatus('disconnected'));
@@ -445,7 +446,7 @@ export default function App() {
       setProfileStatus(status);
       setProfileEmoji(emoji);
       // Пробуем войти
-      const socket = socketRef.current || io('http://localhost:4000');
+      const socket = socketRef.current || io();
       socketRef.current = socket;
       socket.emit('joinLobby', { code: savedCode, name: savedNick, avatar, profileBorder: border, profileBg: bg, profileStatus: status, profileEmoji: emoji }, (res: any) => {
         if (res.error) {
