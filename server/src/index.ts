@@ -9,9 +9,10 @@ app.use(cors());
 
 // Отдача статики фронта
 app.use(express.static(path.join(__dirname, '../public')));
-// SPA fallback
+
+// SPA fallback (после всех остальных маршрутов)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.resolve(__dirname, '../public/index.html'));
 });
 
 const server = http.createServer(app);
