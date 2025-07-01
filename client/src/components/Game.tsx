@@ -1,0 +1,204 @@
+import React from 'react';
+
+interface GameProps {
+  isHost: boolean;
+  isGameStarted: boolean;
+  game: any;
+  wordInput: string;
+  setWordInput: (v: string) => void;
+  handleStartGame: () => void;
+  handleSetWord: (e: React.FormEvent) => void;
+  gameError: string | null;
+  displayWord: string;
+  wordLength: number;
+  revealed: number;
+  contact: any;
+  contactTimer: number | null;
+  contactWord: string;
+  setContactWord: (v: string) => void;
+  handleContactWord: (e: React.FormEvent) => void;
+  myId: string | null;
+  contactInputRef: React.RefObject<HTMLInputElement>;
+  contactFinished: any;
+  isWordUsed: (w: string) => boolean;
+  handleConfirmContact: () => void;
+  handleRejectContact: () => void;
+  canConfirmContact: boolean;
+  handleResetGame: () => void;
+}
+
+const Game: React.FC<GameProps> = ({
+  isHost,
+  isGameStarted,
+  game,
+  wordInput,
+  setWordInput,
+  handleStartGame,
+  handleSetWord,
+  gameError,
+  displayWord,
+  wordLength,
+  revealed,
+  contact,
+  contactTimer,
+  contactWord,
+  setContactWord,
+  handleContactWord,
+  myId,
+  contactInputRef,
+  contactFinished,
+  isWordUsed,
+  handleConfirmContact,
+  handleRejectContact,
+  canConfirmContact,
+  handleResetGame,
+}) => {
+  return (
+    <div>
+      {/* --- ИГРОВОЙ ЭКРАН --- */}
+      {isHost && !isGameStarted && (
+        <div className="mb-4">
+          <button
+            className="w-full py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700 transition mb-2"
+            onClick={handleStartGame}
+          >
+            Начать игру
+          </button>
+          {game?.phase === 'waiting' && (
+            <form onSubmit={handleSetWord} className="flex gap-2 mt-2">
+              <input
+                className="flex-1 px-3 py-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="text"
+                value={wordInput}
+                onChange={e => setWordInput(e.target.value)}
+                maxLength={24}
+                placeholder="Загадайте слово..."
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+              >
+                ОК
+              </button>
+            </form>
+          )}
+          {gameError && <div className="text-red-500 text-sm mt-2">{gameError}</div>}
+        </div>
+      )}
+      {!isHost && game?.phase === 'waiting' && (
+        <div className="mb-4 text-center text-gray-700 dark:text-gray-200">Ведущий готовит игру...</div>
+      )}
+      {isGameStarted && (
+        <div className="mb-4 text-center">
+          <div className="text-lg font-mono tracking-widest text-gray-900 dark:text-white mb-2 animate-fade-in">
+            {game?.word?.split('').map((ch: string, i: number) => (
+              <span
+                key={i}
+                className={
+                  i < revealed
+                    ? `text-blue-600 dark:text-blue-300 font-bold transition inline-block ${i === revealed - 1 ? 'animate-bounce-letter' : ''}`
+                    : 'transition'
+                }
+              >
+                {i < revealed ? ch.toUpperCase() : '_'}{' '}
+              </span>
+            ))}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Длина слова: {wordLength}</div>
+        </div>
+      )}
+      {/* --- КОНТАКТ --- */}
+      {contact && (
+        <div className="mb-4 p-4 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100">
+          <div className="mb-2 font-semibold">Контакт между игроками</div>
+          <div className="mb-2">Осталось времени: <span className="font-mono">{Math.ceil((contactTimer || 0) / 1000)} сек</span></div>
+          {([contact.from, contact.to].includes(myId)) ? (
+            <form className="flex gap-2" onSubmit={handleContactWord}>
+              <input
+                ref={contactInputRef}
+                className="flex-1 px-3 py-3 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
+                type="text"
+                value={contactWord}
+                onChange={e => setContactWord(e.target.value)}
+                maxLength={24}
+                placeholder="Ваше слово..."
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="px-4 py-3 md:py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
+                disabled={!contactWord.trim()}
+              >
+                Отправить
+              </button>
+            </form>
+          ) : (
+            <div className="italic text-sm">Ждём, пока оба игрока введут слово...</div>
+          )}
+        </div>
+      )}
+      {/* --- КОНЕЦ КОНТАКТА --- */}
+      {/* --- РЕЗУЛЬТАТ КОНТАКТА --- */}
+      {contactFinished && (
+        <div className="mb-4 p-4 rounded bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-100">
+          <div className="mb-2 font-semibold">Результат контакта:</div>
+          <div className="mb-1">{contactFinished.fromName}: {contactFinished.words?.[contactFinished.from] || <span className="italic text-gray-400">—</span>}</div>
+          <div className="mb-1">{contactFinished.toName}: {contactFinished.words?.[contactFinished.to] || <span className="italic text-gray-400">—</span>}</div>
+          {contactFinished.cancelled && <div className="text-red-500">Контакт отменён</div>}
+          {isHost && !contact && (
+            <div className="flex gap-2 mt-2">
+              <button
+                className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                onClick={handleConfirmContact}
+                disabled={!canConfirmContact}
+              >
+                Подтвердить
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 transition"
+                onClick={handleRejectContact}
+              >
+                Отклонить
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {/* Кнопка новой игры при полном открытии слова */}
+      {isHost && game?.word && game?.revealed === game?.word.length && (
+        <div className="mt-4">
+          <button
+            className="w-full py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700 transition"
+            onClick={handleResetGame}
+          >
+            Начать новую игру
+          </button>
+        </div>
+      )}
+      {/* Лог использованных слов */}
+      {game?.usedWords?.length > 0 && (
+        <div className="mb-4">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Использованные слова:</div>
+          <div className="flex flex-wrap gap-2">
+            {game.usedWords.map((w: string, i: number) => (
+              <span key={i} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-xs">{w}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {game?.phase === 'waiting' && (
+        <div className="mb-4 text-center animate-fade-in">
+          <span className="inline-block px-3 py-1 rounded bg-yellow-200 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100 font-semibold">Фаза: ожидание слова ведущим</span>
+        </div>
+      )}
+      {game?.phase === 'playing' && (
+        <div className="mb-4 text-center animate-fade-in">
+          <span className="inline-block px-3 py-1 rounded bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 font-semibold">Фаза: игра</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Game; 
