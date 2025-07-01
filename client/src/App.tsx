@@ -3,7 +3,6 @@ import { io, Socket } from "socket.io-client";
 import Lobby from './components/Lobby';
 import Game from './components/Game';
 import Chat from './components/Chat';
-import path from 'path';
 
 const getInitialTheme = () => {
   if (typeof window !== "undefined") {

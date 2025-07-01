@@ -18,7 +18,7 @@ interface GameProps {
   setContactWord: (v: string) => void;
   handleContactWord: (e: React.FormEvent) => void;
   myId: string | null;
-  contactInputRef: React.RefObject<HTMLInputElement>;
+  contactInputRef: React.RefObject<HTMLInputElement | null>;
   contactFinished: any;
   isWordUsed: (w: string) => boolean;
   handleConfirmContact: () => void;

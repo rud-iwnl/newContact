@@ -25,7 +25,7 @@ interface ChatProps {
   handleReaction: (id: string, reaction: string | null) => void;
   chatInput: string;
   setChatInput: (v: string) => void;
-  chatInputRef: React.RefObject<HTMLInputElement>;
+  chatInputRef: React.RefObject<HTMLInputElement | null>;
   handleSendMessage: (e: React.FormEvent) => void;
   chatError: string | null;
 }
