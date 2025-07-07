@@ -28,6 +28,7 @@ interface ChatProps {
   chatInputRef: React.RefObject<HTMLInputElement | null>;
   handleSendMessage: (e: React.FormEvent) => void;
   chatError: string | null;
+  handleHostKnows: (id: string) => void;
 }
 
 const REACTIONS = [
@@ -63,6 +64,7 @@ const Chat: React.FC<ChatProps> = ({
   chatInputRef,
   handleSendMessage,
   chatError,
+  handleHostKnows,
 }) => {
   const chatEndRef = React.useRef<HTMLDivElement | null>(null);
   React.useEffect(() => {
@@ -105,6 +107,15 @@ const Chat: React.FC<ChatProps> = ({
                     <span className="block text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{msg.userName}</span>
                     <span className="block text-sm text-gray-900 dark:text-gray-100 break-words">{msg.text}</span>
                   </div>
+                  {/* Кнопка 'Я знаю' только для ведущего */}
+                  {isHost && msg.userId !== myId && (
+                    <button
+                      className="ml-1 px-2 py-1 text-xs rounded bg-yellow-500 text-white hover:bg-yellow-600 transition whitespace-nowrap"
+                      onClick={() => handleHostKnows(msg.id)}
+                    >
+                      Я знаю
+                    </button>
+                  )}
                   {/* Кнопка контакт */}
                   {!isHost && msg.userId !== myId && !usedContacts.includes(msg.id) && !isWordUsed(msg.text) && (
                     <button
