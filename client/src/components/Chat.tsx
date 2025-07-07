@@ -64,11 +64,18 @@ const Chat: React.FC<ChatProps> = ({
   handleSendMessage,
   chatError,
 }) => {
+  const chatEndRef = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chat]);
+
   return (
     <>
       {isGameStarted && (
-        <div className="mb-1 text-center">
-          <div className="text-lg font-mono tracking-widest text-gray-900 dark:text-white mb-1 animate-fade-in">
+        <div className="mb-2 text-center">
+          <div className="text-2xl font-mono tracking-widest text-blue-700 dark:text-blue-300 font-bold animate-fade-in">
             {displayWord}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">Длина слова: {wordLength}</div>
@@ -127,6 +134,7 @@ const Chat: React.FC<ChatProps> = ({
                 </div>
               );
             })}
+            <div ref={chatEndRef} />
           </div>
           {!isHost && (
             <form className="flex gap-2 pb-2 md:pb-0" onSubmit={handleSendMessage}>

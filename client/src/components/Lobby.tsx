@@ -66,6 +66,14 @@ const Lobby: React.FC<LobbyProps> = ({
           </div>
         ))}
       </div>
+      <div className="flex justify-end mt-2">
+        <button
+          className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 text-xs font-semibold"
+          onClick={() => window.location.reload()}
+        >
+          Вернуться в лобби
+        </button>
+      </div>
     </div>
   );
 };

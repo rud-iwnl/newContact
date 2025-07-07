@@ -89,7 +89,7 @@ const Game: React.FC<GameProps> = ({
       {!isHost && game?.phase === 'waiting' && (
         <div className="mb-4 text-center text-gray-700 dark:text-gray-200">Ведущий готовит игру...</div>
       )}
-      {isGameStarted && (
+      {isGameStarted && false && (
         <div className="mb-4 text-center">
           <div className="text-lg font-mono tracking-widest text-gray-900 dark:text-white mb-2 animate-fade-in">
             {game?.word?.split('').map((ch: string, i: number) => (
@@ -110,29 +110,35 @@ const Game: React.FC<GameProps> = ({
       )}
       {/* --- КОНТАКТ --- */}
       {contact && (
-        <div className="mb-4 p-4 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100">
+        <div className="mb-4 p-4 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 border-2 border-yellow-400 animate-pulse">
           <div className="mb-2 font-semibold">Контакт между игроками</div>
           <div className="mb-2">Осталось времени: <span className="font-mono">{Math.ceil((contactTimer || 0) / 1000)} сек</span></div>
           {([contact.from, contact.to].includes(myId)) ? (
-            <form className="flex gap-2" onSubmit={handleContactWord}>
-              <input
-                ref={contactInputRef}
-                className="flex-1 px-3 py-3 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
-                type="text"
-                value={contactWord}
-                onChange={e => setContactWord(e.target.value)}
-                maxLength={24}
-                placeholder="Ваше слово..."
-                autoFocus
-              />
-              <button
-                type="submit"
-                className="px-4 py-3 md:py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
-                disabled={!contactWord.trim()}
-              >
-                Отправить
-              </button>
-            </form>
+            <>
+              <div className="mb-1 text-sm font-semibold text-blue-700 dark:text-blue-200">
+                {contactWord.trim() ? 'Ждём второго игрока...' : 'Ваш ход! Введите слово'}
+              </div>
+              <form className="flex gap-2" onSubmit={handleContactWord}>
+                <input
+                  ref={contactInputRef}
+                  className="flex-1 px-3 py-3 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
+                  type="text"
+                  value={contactWord}
+                  onChange={e => setContactWord(e.target.value)}
+                  maxLength={24}
+                  placeholder="Ваше слово..."
+                  autoFocus
+                  disabled={!!contactWord.trim()}
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-3 md:py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
+                  disabled={!contactWord.trim()}
+                >
+                  Отправить
+                </button>
+              </form>
+            </>
           ) : (
             <div className="italic text-sm">Ждём, пока оба игрока введут слово...</div>
           )}
