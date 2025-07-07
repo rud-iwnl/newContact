@@ -25,6 +25,7 @@ interface GameProps {
   handleRejectContact: () => void;
   canConfirmContact: boolean;
   handleResetGame: () => void;
+  contactWords: Record<string, string>;
 }
 
 const Game: React.FC<GameProps> = ({
@@ -52,6 +53,7 @@ const Game: React.FC<GameProps> = ({
   handleRejectContact,
   canConfirmContact,
   handleResetGame,
+  contactWords,
 }) => {
   return (
     <div>
@@ -116,7 +118,7 @@ const Game: React.FC<GameProps> = ({
           {([contact.from, contact.to].includes(myId)) ? (
             <>
               <div className="mb-1 text-sm font-semibold text-blue-700 dark:text-blue-200">
-                {contactWord.trim() ? 'Ждём второго игрока...' : 'Ваш ход! Введите слово'}
+                {contactWords?.[myId || ''] ? 'Ждём второго игрока...' : 'Ваш ход! Введите слово'}
               </div>
               <form className="flex gap-2" onSubmit={handleContactWord}>
                 <input
@@ -128,12 +130,12 @@ const Game: React.FC<GameProps> = ({
                   maxLength={24}
                   placeholder="Ваше слово..."
                   autoFocus
-                  disabled={!!contactWord.trim()}
+                  disabled={!!contactWords?.[myId || '']}
                 />
                 <button
                   type="submit"
                   className="px-4 py-3 md:py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
-                  disabled={!contactWord.trim()}
+                  disabled={!contactWord.trim() || !!contactWords?.[myId || '']}
                 >
                   Отправить
                 </button>
