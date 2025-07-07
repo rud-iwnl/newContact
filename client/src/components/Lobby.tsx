@@ -18,6 +18,7 @@ interface LobbyProps {
   theme: string;
   setTheme: (theme: string) => void;
   handleChangeHost: (id: string) => void;
+  handleLeaveLobby: () => void;
 }
 
 const Lobby: React.FC<LobbyProps> = ({
@@ -28,6 +29,7 @@ const Lobby: React.FC<LobbyProps> = ({
   theme,
   setTheme,
   handleChangeHost,
+  handleLeaveLobby,
 }) => {
   const isHost = hostId === myId;
   return (
@@ -68,10 +70,10 @@ const Lobby: React.FC<LobbyProps> = ({
       </div>
       <div className="flex justify-end mt-2">
         <button
-          className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 text-xs font-semibold"
-          onClick={() => window.location.reload()}
+          className="px-3 py-1 rounded bg-red-200 dark:bg-red-700 text-red-800 dark:text-red-100 hover:bg-red-300 dark:hover:bg-red-600 text-xs font-semibold"
+          onClick={handleLeaveLobby}
         >
-          Вернуться в лобби
+          Выйти из лобби
         </button>
       </div>
     </div>

@@ -559,7 +559,7 @@ export default function App() {
             {theme === "dark" ? "🌙" : "☀️"}
           </button>
         </div>
-        <form className="space-y-4" onSubmit={handleLobbyEnter}>
+        <form className="space-y-4 min-h-[420px] flex flex-col justify-between" onSubmit={handleLobbyEnter}>
           <div>
             <label className="block text-gray-700 dark:text-gray-200 mb-1">Никнейм</label>
             <input
@@ -683,11 +683,12 @@ export default function App() {
               />
             </div>
           )}
-          {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+          {error && <div className="text-red-500 text-sm mt-2 mb-2 text-center">{error}</div>}
           <button
             type="submit"
             className="w-full mt-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
             disabled={!nickname || (mode === "join" && !lobbyCode)}
+            style={{ position: 'sticky', bottom: 0, zIndex: 10 }}
           >
             {mode === "join" ? "Войти в лобби" : "Создать лобби"}
           </button>

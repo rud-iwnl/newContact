@@ -120,10 +120,10 @@ const Game: React.FC<GameProps> = ({
               <div className="mb-1 text-sm font-semibold text-blue-700 dark:text-blue-200">
                 {contactWords?.[myId || ''] ? 'Ждём второго игрока...' : 'Ваш ход! Введите слово'}
               </div>
-              <form className="flex gap-2" onSubmit={handleContactWord}>
+              <form className="flex flex-col xs:flex-row gap-2 mt-2" onSubmit={handleContactWord}>
                 <input
                   ref={contactInputRef}
-                  className="flex-1 px-3 py-3 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
+                  className="flex-1 px-3 py-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
                   type="text"
                   value={contactWord}
                   onChange={e => setContactWord(e.target.value)}
@@ -134,7 +134,7 @@ const Game: React.FC<GameProps> = ({
                 />
                 <button
                   type="submit"
-                  className="px-4 py-3 md:py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
+                  className="w-full xs:w-auto px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
                   disabled={!contactWord.trim() || !!contactWords?.[myId || '']}
                 >
                   Отправить
