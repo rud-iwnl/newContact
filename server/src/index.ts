@@ -53,6 +53,8 @@ type ContactState = {
   timer: NodeJS.Timeout | null;
   expiresAt: number;
   finished: boolean;
+  hostInvolved: boolean;
+  hostWord?: string;
 };
 type Lobby = {
   code: string;
@@ -210,6 +212,7 @@ io.on('connection', (socket) => {
       timer: null,
       expiresAt: Date.now() + 20000,
       finished: false,
+      hostInvolved: false,
     };
     lobby.contact = contact;
     io.to(code).emit('contactStarted', { from: socket.id, to: msg.userId, messageId, expiresAt: contact.expiresAt });
@@ -234,24 +237,92 @@ io.on('connection', (socket) => {
     code = code.toUpperCase();
     const lobby = lobbies[code];
     if (!lobby || !lobby.contact || lobby.contact.finished) return cb && cb({ error: 'Нет активного контакта' });
-    if (socket.id !== lobby.contact.from && socket.id !== lobby.contact.to) return cb && cb({ error: 'Вы не участник контакта' });
+    // Определяем участников
+    const { from, to, hostInvolved } = lobby.contact;
+    const hostId = lobby.hostId;
+    // Проверка: кто может отправлять слово
+    const allowed = [from, to];
+    if (hostInvolved) allowed.push(hostId);
+    if (!allowed.includes(socket.id)) return cb && cb({ error: 'Вы не участник контакта' });
     lobby.contact.words[socket.id] = word.trim();
-    io.to(code).emit('contactUpdate', { words: lobby.contact.words });
-    // Если оба игрока отправили слова — завершаем контакт сразу
-    if (lobby.contact.words[lobby.contact.from] && lobby.contact.words[lobby.contact.to] && !lobby.contact.finished) {
-      if (lobby.contact.timer) clearTimeout(lobby.contact.timer);
-      lobby.contact.finished = true;
-      lobby.usedContacts = lobby.usedContacts || [];
-      lobby.usedContacts.push(lobby.contact.messageId);
-      const fromPlayer = lobby.players.find(p => p.id === lobby.contact!.from);
-      const toPlayer = lobby.players.find(p => p.id === lobby.contact!.to);
-      io.to(code).emit('contactFinished', {
-        words: lobby.contact.words,
-        from: lobby.contact.from,
-        to: lobby.contact.to,
-        fromName: fromPlayer?.name || 'Игрок 1',
-        toName: toPlayer?.name || 'Игрок 2',
-      });
+    io.to(code).emit('contactUpdate', { words: lobby.contact.words, hostInvolved });
+    // --- Логика завершения контакта ---
+    if (!hostInvolved) {
+      // Обычный контакт (2 участника)
+      if (lobby.contact.words[from] && lobby.contact.words[to] && !lobby.contact.finished) {
+        if (lobby.contact.timer) clearTimeout(lobby.contact.timer);
+        lobby.contact.finished = true;
+        lobby.usedContacts = lobby.usedContacts || [];
+        lobby.usedContacts.push(lobby.contact.messageId);
+        const fromPlayer = lobby.players.find(p => p.id === from);
+        const toPlayer = lobby.players.find(p => p.id === to);
+        io.to(code).emit('contactFinished', {
+          words: lobby.contact.words,
+          from,
+          to,
+          fromName: fromPlayer?.name || 'Игрок 1',
+          toName: toPlayer?.name || 'Игрок 2',
+          hostInvolved: false,
+        });
+      }
+    } else {
+      // Контакт с ведущим (2 или 3 участника)
+      const hostWord = lobby.contact.words[hostId];
+      const fromWord = lobby.contact.words[from];
+      const toWord = lobby.contact.words[to];
+      // Если контакт между ведущим и игроком (до контакта)
+      if (from === hostId || to === hostId) {
+        const otherId = from === hostId ? to : from;
+        if (hostWord && lobby.contact.words[otherId] && !lobby.contact.finished) {
+          if (lobby.contact.timer) clearTimeout(lobby.contact.timer);
+          lobby.contact.finished = true;
+          lobby.usedContacts = lobby.usedContacts || [];
+          lobby.usedContacts.push(lobby.contact.messageId);
+          const hostPlayer = lobby.players.find(p => p.id === hostId);
+          const otherPlayer = lobby.players.find(p => p.id === otherId);
+          io.to(code).emit('contactFinished', {
+            words: lobby.contact.words,
+            from: hostId,
+            to: otherId,
+            fromName: hostPlayer?.name || 'Ведущий',
+            toName: otherPlayer?.name || 'Игрок',
+            hostInvolved: true,
+          });
+        }
+      } else {
+        // Контакт втроём (оба игрока + ведущий)
+        if (hostWord && fromWord && toWord && !lobby.contact.finished) {
+          if (lobby.contact.timer) clearTimeout(lobby.contact.timer);
+          lobby.contact.finished = true;
+          lobby.usedContacts = lobby.usedContacts || [];
+          lobby.usedContacts.push(lobby.contact.messageId);
+          const fromPlayer = lobby.players.find(p => p.id === from);
+          const toPlayer = lobby.players.find(p => p.id === to);
+          const hostPlayer = lobby.players.find(p => p.id === hostId);
+          // Если слово ведущего совпадает с обоими — срыв контакта
+          const hostWordNorm = hostWord.trim().toLowerCase();
+          const fromWordNorm = fromWord.trim().toLowerCase();
+          const toWordNorm = toWord.trim().toLowerCase();
+          let contactResult = 'normal';
+          if (hostWordNorm === fromWordNorm && hostWordNorm === toWordNorm) {
+            // Срыв контакта
+            contactResult = 'break';
+            if (lobby.game && !lobby.game.usedWords.includes(hostWordNorm)) {
+              lobby.game.usedWords.push(hostWordNorm);
+            }
+          }
+          io.to(code).emit('contactFinished', {
+            words: lobby.contact.words,
+            from,
+            to,
+            fromName: fromPlayer?.name || 'Игрок 1',
+            toName: toPlayer?.name || 'Игрок 2',
+            hostInvolved: true,
+            hostName: hostPlayer?.name || 'Ведущий',
+            contactResult,
+          });
+        }
+      }
     }
     cb && cb({ ok: true });
   });
@@ -333,6 +404,62 @@ io.on('connection', (socket) => {
     lobby.hostId = newHostId;
     io.to(code).emit('updateLobby', lobby);
     cb && cb({ ok: true });
+  });
+
+  // --- ДОБАВЛЯЕМ: обработка события 'hostKnows' ---
+  socket.on('hostKnows', ({ code, messageId }, cb) => {
+    code = code.toUpperCase();
+    const lobby = lobbies[code];
+    if (!lobby || !lobby.game || !lobby.game.started) return cb && cb({ error: 'Игра не идёт' });
+    if (lobby.hostId !== socket.id) return cb && cb({ error: 'Только ведущий может использовать эту функцию' });
+    lobby.usedContacts = lobby.usedContacts || [];
+    if (lobby.usedContacts.includes(messageId)) return cb && cb({ error: 'Контакт уже был по этому сообщению' });
+    const msg = (lobby.chat || []).find(m => m.id === messageId);
+    if (!msg) return cb && cb({ error: 'Сообщение не найдено' });
+    const word = msg.text.trim().toLowerCase();
+    if (lobby.game.usedWords.includes(word)) return cb && cb({ error: 'Это слово уже использовано' });
+    // Если нет активного контакта — создаём контакт между ведущим и игроком
+    if (!lobby.contact || lobby.contact.finished) {
+      const contact = {
+        messageId,
+        from: lobby.hostId,
+        to: msg.userId,
+        words: {},
+        timer: null,
+        expiresAt: Date.now() + 20000,
+        finished: false,
+        hostInvolved: true,
+      };
+      lobby.contact = contact;
+      io.to(code).emit('contactStarted', { from: lobby.hostId, to: msg.userId, messageId, expiresAt: contact.expiresAt, hostInvolved: true });
+      // Таймер
+      contact.timer = setTimeout(() => {
+        contact.finished = true;
+        lobby.usedContacts!.push(messageId);
+        const fromPlayer = lobby.players.find(p => p.id === contact.from);
+        const toPlayer = lobby.players.find(p => p.id === contact.to);
+        io.to(code).emit('contactFinished', {
+          words: contact.words,
+          from: contact.from,
+          to: contact.to,
+          fromName: fromPlayer?.name || 'Ведущий',
+          toName: toPlayer?.name || 'Игрок',
+          hostInvolved: true,
+        });
+      }, 20000);
+      cb && cb({ ok: true });
+      return;
+    }
+    // Если уже идёт контакт между двумя игроками — втроём
+    if (lobby.contact && !lobby.contact.finished && !lobby.contact.hostInvolved) {
+      lobby.contact.hostInvolved = true;
+      lobby.contact.hostWord = undefined;
+      io.to(code).emit('contactUpdate', { words: lobby.contact.words, hostInvolved: true });
+      // Таймер остаётся прежним
+      cb && cb({ ok: true });
+      return;
+    }
+    cb && cb({ error: 'Контакт уже с ведущим или завершён' });
   });
 });
 

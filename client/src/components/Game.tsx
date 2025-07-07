@@ -113,9 +113,45 @@ const Game: React.FC<GameProps> = ({
       {/* --- КОНТАКТ --- */}
       {contact && (
         <div className="mb-4 p-4 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 border-2 border-yellow-400 animate-pulse">
-          <div className="mb-2 font-semibold">Контакт между игроками</div>
+          <div className="mb-2 font-semibold">Контакт между игроками{contact.hostInvolved ? ' и ведущим' : ''}</div>
           <div className="mb-2">Осталось времени: <span className="font-mono">{Math.ceil((contactTimer || 0) / 1000)} сек</span></div>
-          {([contact.from, contact.to].includes(myId)) ? (
+          {/* Если контакт втроём — показываем поля для всех */}
+          {contact.hostInvolved ? (
+            <>
+              <div className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-200">Все участники должны ввести слово</div>
+              <div className="flex flex-col gap-2">
+                {/* Поле для текущего игрока (ведущий или игрок) */}
+                {([contact.from, contact.to, game?.hostId].includes(myId)) && (
+                  <form className="flex flex-col xs:flex-row gap-2 mt-2" onSubmit={handleContactWord}>
+                    <input
+                      ref={contactInputRef}
+                      className="flex-1 px-3 py-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
+                      type="text"
+                      value={contactWord}
+                      onChange={e => setContactWord(e.target.value)}
+                      maxLength={24}
+                      placeholder="Ваше слово..."
+                      autoFocus
+                      disabled={!!contactWords?.[myId || '']}
+                    />
+                    <button
+                      type="submit"
+                      className="w-full xs:w-auto px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
+                      disabled={!contactWord.trim() || !!contactWords?.[myId || '']}
+                    >
+                      Отправить
+                    </button>
+                  </form>
+                )}
+                {/* Для остальных участников просто статус */}
+                {([contact.from, contact.to, game?.hostId].filter(id => id !== myId).map(id => (
+                  <div key={id} className="text-xs text-gray-700 dark:text-gray-300">
+                    {id === game?.hostId ? 'Ведущий' : 'Игрок'}: {contactWords?.[id] ? 'Отправил слово' : 'Ждёт ввода...'}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : ([contact.from, contact.to].includes(myId)) ? (
             <>
               <div className="mb-1 text-sm font-semibold text-blue-700 dark:text-blue-200">
                 {contactWords?.[myId || ''] ? 'Ждём второго игрока...' : 'Ваш ход! Введите слово'}
@@ -153,6 +189,12 @@ const Game: React.FC<GameProps> = ({
           <div className="mb-2 font-semibold">Результат контакта:</div>
           <div className="mb-1">{contactFinished.fromName}: {contactFinished.words?.[contactFinished.from] || <span className="italic text-gray-400">—</span>}</div>
           <div className="mb-1">{contactFinished.toName}: {contactFinished.words?.[contactFinished.to] || <span className="italic text-gray-400">—</span>}</div>
+          {contactFinished.hostInvolved && contactFinished.hostName && (
+            <div className="mb-1">{contactFinished.hostName}: {contactFinished.words?.[game?.hostId] || <span className="italic text-gray-400">—</span>}</div>
+          )}
+          {contactFinished.contactResult === 'break' && (
+            <div className="text-red-500 font-semibold mt-2">Срыв контакта! Ведущий угадал слово.</div>
+          )}
           {contactFinished.cancelled && <div className="text-red-500">Контакт отменён</div>}
           {isHost && !contact && (
             <div className="flex gap-2 mt-2">
