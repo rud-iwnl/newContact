@@ -144,7 +144,7 @@ const Game: React.FC<GameProps> = ({
                   </form>
                 )}
                 {/* Для остальных участников просто статус */}
-                {([contact.from, contact.to, game?.hostId].filter(id => id !== myId).map(id => (
+                {([contact.from, contact.to, game?.hostId].filter(id => id !== myId)).map(id => (
                   <div key={id} className="text-xs text-gray-700 dark:text-gray-300">
                     {id === game?.hostId ? 'Ведущий' : 'Игрок'}: {contactWords?.[id] ? 'Отправил слово' : 'Ждёт ввода...'}
                   </div>
