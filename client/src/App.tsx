@@ -514,6 +514,7 @@ export default function App() {
               handleRejectContact={handleRejectContact}
               canConfirmContact={canConfirmContact}
               handleResetGame={handleResetGame}
+              contactWords={contactWords}
             />
           </div>
           {/* Разделитель */}
