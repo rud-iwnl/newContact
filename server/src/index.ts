@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -209,7 +210,7 @@ io.on('connection', (socket) => {
       from: socket.id,
       to: msg.userId,
       words: {},
-      timer: null,
+      timer: null as NodeJS.Timeout | null,
       expiresAt: Date.now() + 20000,
       finished: false,
       hostInvolved: false,
@@ -425,7 +426,7 @@ io.on('connection', (socket) => {
         from: lobby.hostId,
         to: msg.userId,
         words: {},
-        timer: null,
+        timer: null as NodeJS.Timeout | null,
         expiresAt: Date.now() + 20000,
         finished: false,
         hostInvolved: true,
