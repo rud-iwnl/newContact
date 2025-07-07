@@ -426,6 +426,12 @@ export default function App() {
     });
   };
 
+  // Обработчик для кнопки 'Я знаю' (только для ведущего)
+  const handleHostKnows = (messageId: string) => {
+    if (!socketRef.current || !myLobbyCode) return;
+    socketRef.current.emit('hostKnows', { code: myLobbyCode, messageId });
+  };
+
   // --- Внутри App ---
   useEffect(() => {
     // Попытка восстановления сессии
@@ -540,6 +546,7 @@ export default function App() {
               chatInputRef={chatInputRef}
               handleSendMessage={handleSendMessage}
               chatError={chatError}
+              handleHostKnows={handleHostKnows}
             />
           </div>
         </div>
