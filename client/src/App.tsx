@@ -377,6 +377,7 @@ export default function App() {
 
   // Инициация контакта
   const handleContact = (messageId: string) => {
+    if (contact) return; // Если уже есть активный контакт, не даём отправить новый
     if (!socketRef.current || !myLobbyCode) return;
     socketRef.current.emit('contactRequest', { code: myLobbyCode, messageId });
   };

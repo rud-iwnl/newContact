@@ -31,10 +31,7 @@ interface ChatProps {
 }
 
 const REACTIONS = [
-  { key: 'like', emoji: '👍' },
-  { key: 'love', emoji: '❤️' },
-  { key: 'fun', emoji: '😂' },
-  { key: 'think', emoji: '🤔' },
+  { key: 'like', emoji: '✅' },
   { key: 'dislike', emoji: '❌' },
 ];
 
@@ -111,7 +108,7 @@ const Chat: React.FC<ChatProps> = ({
                     </button>
                   )}
                   {/* Реакции */}
-                  <div className="flex items-center gap-1 ml-2">
+                  <div className="flex items-center gap-1 ml-2 min-w-[48px] md:min-w-[48px] justify-end">
                     {REACTIONS.map(r => {
                       const count = (Object.values(msg.reactions || {}) as string[]).filter((val: string) => val === r.key).length;
                       return (
