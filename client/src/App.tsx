@@ -293,8 +293,10 @@ export default function App() {
     const ids = contact.hostInvolved ? [contact.from, contact.to, game.hostId] : [contact.from, contact.to];
     const allEntered = ids.every(id => contactWords[id]);
     if (!allEntered) return;
-    const mainWord = game.word.trim().toLowerCase();
-    const allGuessed = ids.every(id => contactWords[id]?.trim().toLowerCase() === mainWord);
+    // Сравниваем слова без учёта регистра и пробелов
+    const normalize = (w: string) => w.trim().toLowerCase();
+    const mainWord = normalize(game.word);
+    const allGuessed = ids.every(id => normalize(contactWords[id] || '') === mainWord);
     if (allGuessed && socketRef.current && myId === game.hostId && game.revealed < game.word.length) {
       socketRef.current.emit('confirmContact', { code: myLobbyCode });
     }
