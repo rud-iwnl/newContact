@@ -386,8 +386,17 @@ export default function App() {
   const handleContactWord = (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactWord.trim() || !socketRef.current || !myLobbyCode) return;
+    // Проверка: слово должно начинаться с открытых букв
+    if (game?.word && game?.revealed) {
+      const prefix = game.word.slice(0, game.revealed).toLowerCase();
+      if (contactWord.trim().toLowerCase().slice(0, prefix.length) !== prefix) {
+        setGameError(`Слово должно начинаться с: ${game.word.slice(0, game.revealed).toUpperCase()}`);
+        return;
+      }
+    }
     socketRef.current.emit('contactWord', { code: myLobbyCode, word: contactWord }, () => {
       setContactWord("");
+      setGameError(null);
     });
   };
 
