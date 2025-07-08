@@ -561,16 +561,7 @@ export default function App() {
               contactWords={contactWords}
               handleRevealAll={() => {
                 if (!game?.word || !socketRef.current || !myLobbyCode) return;
-                // Если сервер поддерживает revealAll, используем его
-                if (socketRef.current.emit.length >= 2) {
-                  socketRef.current.emit('revealAll', { code: myLobbyCode });
-                } else {
-                  // Fallback: confirmContact много раз
-                  const toReveal = (game.word.length || 0) - (game.revealed || 0);
-                  for (let i = 0; i < toReveal; i++) {
-                    socketRef.current.emit('confirmContact', { code: myLobbyCode });
-                  }
-                }
+                socketRef.current.emit('revealAll', { code: myLobbyCode });
               }}
             />
           </div>

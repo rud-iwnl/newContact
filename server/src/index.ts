@@ -105,6 +105,9 @@ io.on('connection', (socket) => {
     code = code.toUpperCase();
     const lobby = lobbies[code];
     if (!lobby) return;
+    // Сброс очков только у покидающего игрока
+    const player = lobby.players.find(p => p.id === socket.id);
+    if (player) player.score = 0;
     lobby.players = lobby.players.filter(p => p.id !== socket.id);
     if (lobby.hostId === socket.id && lobby.players.length > 0) {
       lobby.hostId = lobby.players[0].id;
@@ -167,8 +170,7 @@ io.on('connection', (socket) => {
     code = code.toUpperCase();
     const lobby = lobbies[code];
     if (!lobby || lobby.hostId !== socket.id) return cb && cb({ error: 'Нет прав' });
-    // Сброс очков
-    lobby.players.forEach(p => { p.score = 0; });
+    // НЕ сбрасываем очки!
     lobby.game = undefined;
     lobby.chat = [];
     io.to(code).emit('updateLobby', lobby);
@@ -362,12 +364,21 @@ io.on('connection', (socket) => {
     const word = lobby.game.word?.trim().toLowerCase();
     const ids = contact.hostInvolved ? [contact.from, contact.to, lobby.hostId] : [contact.from, contact.to];
     const allGuessed = ids.every(id => (contact.words[id] || '').trim().toLowerCase() === word);
-    // --- начисление очков ---
-    if (allGuessed && word) {
-      ids.forEach(id => {
+    // --- начисление очков при каждом успешном контакте ---
+    const bothGuessed = contact.words[contact.from] && contact.words[contact.to] && (contact.words[contact.from].trim().toLowerCase() === contact.words[contact.to].trim().toLowerCase());
+    if (bothGuessed) {
+      [contact.from, contact.to].forEach(id => {
         const player = lobby.players.find(p => p.id === id);
         if (player) player.score = (player.score || 0) + 1;
       });
+      // Если втроём и ведущий тоже угадал — ему тоже очко
+      if (contact.hostInvolved && contact.words[lobby.hostId] && contact.words[lobby.hostId].trim().toLowerCase() === contact.words[contact.from].trim().toLowerCase()) {
+        const hostPlayer = lobby.players.find(p => p.id === lobby.hostId);
+        if (hostPlayer) hostPlayer.score = (hostPlayer.score || 0) + 1;
+      }
+    }
+    // Если все угадали загаданное слово — открыть всё слово
+    if (allGuessed && word) {
       lobby.game.revealed = word.length;
     } else if (lobby.game.revealed < (lobby.game.word?.length || 0)) {
       lobby.game.revealed++;
