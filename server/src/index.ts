@@ -374,6 +374,9 @@ io.on('connection', (socket) => {
         if (!lobby.game.usedWords.includes(playerWord)) {
           lobby.game.usedWords.push(playerWord);
         }
+        // Ведущий получает 2 очка
+        const hostPlayer = lobby.players.find(p => p.id === lobby.hostId);
+        if (hostPlayer) hostPlayer.score = (hostPlayer.score || 0) + 2;
         lobby.contact = undefined;
         io.to(code).emit('updateLobby', lobby);
         return cb && cb({ ok: true });
