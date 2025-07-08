@@ -59,15 +59,15 @@ const Game: React.FC<GameProps> = ({
     <div>
       {/* --- ИГРОВОЙ ЭКРАН --- */}
       {isHost && !isGameStarted && (
-        <div className="mb-4">
+        <div className="mb-2 xs:mb-4">
           <button
-            className="w-full py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700 transition mb-2"
+            className="w-full py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700 transition mb-1 xs:mb-2"
             onClick={handleStartGame}
           >
             Начать игру
           </button>
           {game?.phase === 'waiting' && (
-            <form onSubmit={handleSetWord} className="flex gap-2 mt-2">
+            <form onSubmit={handleSetWord} className="flex flex-col xs:flex-row gap-2 mt-2">
               <input
                 className="flex-1 px-3 py-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 type="text"
@@ -79,7 +79,7 @@ const Game: React.FC<GameProps> = ({
               />
               <button
                 type="submit"
-                className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                className="w-full xs:w-auto px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
               >
                 ОК
               </button>
@@ -89,7 +89,7 @@ const Game: React.FC<GameProps> = ({
         </div>
       )}
       {!isHost && game?.phase === 'waiting' && (
-        <div className="mb-4 text-center text-gray-700 dark:text-gray-200">Ведущий готовит игру...</div>
+        <div className="mb-2 xs:mb-4 text-center text-gray-700 dark:text-gray-200">Ведущий готовит игру...</div>
       )}
       {isGameStarted && false && (
         <div className="mb-4 text-center">
@@ -112,7 +112,7 @@ const Game: React.FC<GameProps> = ({
       )}
       {/* --- КОНТАКТ --- */}
       {contact && (
-        <div className="mb-4 p-4 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 border-2 border-yellow-400 animate-pulse">
+        <div className="mb-2 xs:mb-4 p-2 xs:p-4 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 border-2 border-yellow-400 animate-pulse">
           <div className="mb-2 font-semibold">Контакт между игроками{contact.hostInvolved ? ' и ведущим' : ''}</div>
           <div className="mb-2">Осталось времени: <span className="font-mono">{Math.ceil((contactTimer || 0) / 1000)} сек</span></div>
           {/* Если контакт втроём — показываем поля для всех */}

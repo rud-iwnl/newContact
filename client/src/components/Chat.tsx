@@ -85,7 +85,7 @@ const Chat: React.FC<ChatProps> = ({
       )}
       {isGameStarted && (
         <div className="flex-1 flex flex-col">
-          <div className="h-48 md:h-64 overflow-y-auto bg-gray-50 dark:bg-gray-700 rounded-xl p-2 mb-2 flex flex-col gap-2 shadow-inner border border-gray-200 dark:border-gray-600">
+          <div className="h-40 xs:h-48 md:h-64 overflow-y-auto bg-gray-50 dark:bg-gray-700 rounded-xl p-1 xs:p-2 mb-1 xs:mb-2 flex flex-col gap-1 xs:gap-2 shadow-inner border border-gray-200 dark:border-gray-600">
             {chat.length === 0 && <div className="text-gray-400 text-center">Нет сообщений</div>}
             {chat.map((msg, idx) => {
               const likes = (Object.values(msg.reactions || {}) as string[]).filter(r => r === 'like').length;
@@ -148,10 +148,10 @@ const Chat: React.FC<ChatProps> = ({
             <div ref={chatEndRef} />
           </div>
           {!isHost && (
-            <form className="flex gap-2 pb-2 md:pb-0" onSubmit={handleSendMessage}>
+            <form className="flex flex-col xs:flex-row gap-2 pb-2 md:pb-0" onSubmit={handleSendMessage}>
               <input
                 ref={chatInputRef}
-                className="flex-1 px-3 py-3 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
+                className="flex-1 px-3 py-2 xs:py-3 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
                 type="text"
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
@@ -161,7 +161,7 @@ const Chat: React.FC<ChatProps> = ({
               />
               <button
                 type="submit"
-                className="px-4 py-3 md:py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
+                className="w-full xs:w-auto px-4 py-2 xs:py-3 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base md:text-sm"
                 disabled={!chatInput.trim()}
               >
                 Отправить

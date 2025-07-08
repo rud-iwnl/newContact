@@ -482,10 +482,10 @@ export default function App() {
       : '';
 
     return (
-      <div className="fixed inset-0 min-h-screen min-w-screen bg-gray-100 dark:bg-gray-900 transition-colors flex items-center justify-center">
-        <div className="w-full max-w-4xl p-2 md:p-6 rounded-2xl shadow-2xl bg-white dark:bg-gray-800 flex flex-col md:flex-row gap-4 md:gap-6">
+      <div className="fixed inset-0 min-h-screen min-w-screen bg-gray-100 dark:bg-gray-900 transition-colors flex items-center justify-center overflow-auto">
+        <div className="w-full max-w-full sm:max-w-2xl md:max-w-4xl p-1 xs:p-2 md:p-6 rounded-none xs:rounded-2xl shadow-none xs:shadow-2xl bg-white dark:bg-gray-800 flex flex-col md:flex-row gap-2 xs:gap-4 md:gap-6 min-h-screen md:min-h-[80vh]">
           {/* Левая колонка: инфо, игроки, управление */}
-          <div className="flex flex-col gap-4 w-full md:w-[320px]">
+          <div className="flex flex-col gap-2 xs:gap-4 w-full md:w-[320px] min-w-0">
             <Lobby
               myLobbyCode={myLobbyCode}
               players={players}
@@ -527,7 +527,7 @@ export default function App() {
           {/* Разделитель */}
           <div className="hidden md:block w-px bg-gray-200 dark:bg-gray-700 mx-2 rounded-full" />
           {/* Правая колонка: чат и сообщения */}
-          <div className="flex-1 flex flex-col gap-4 min-w-0">
+          <div className="flex-1 min-w-0 flex flex-col">
             <Chat
               isGameStarted={isGameStarted}
               displayWord={displayWord}

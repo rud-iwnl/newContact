@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface Player {
   id: string;
@@ -32,26 +32,45 @@ const Lobby: React.FC<LobbyProps> = ({
   handleLeaveLobby,
 }) => {
   const isHost = hostId === myId;
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    if (myLobbyCode) {
+      navigator.clipboard.writeText(myLobbyCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
   return (
     <div>
-      <div className="flex justify-between items-center mb-1">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Лобби: {myLobbyCode}</h2>
+      <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center mb-1 gap-2 xs:gap-0">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Лобби: <span className="tracking-widest select-all">{myLobbyCode}</span></h2>
+          <button
+            type="button"
+            aria-label="Скопировать код лобби"
+            className="p-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition text-xs border border-blue-300 dark:border-blue-700"
+            onClick={handleCopy}
+            tabIndex={0}
+          >
+            {copied ? '✓' : '⧉'}
+          </button>
+        </div>
         <button
           aria-label="Переключить тему"
-          className="ml-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+          className="ml-0 xs:ml-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition self-start xs:self-auto"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
           {theme === "dark" ? "🌙" : "☀️"}
         </button>
       </div>
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center justify-center xs:justify-start">
         {players.map((p) => (
-          <div key={p.id} className={`flex flex-col items-center p-1 rounded-xl border ${hostId === p.id ? 'border-yellow-400' : p.profileBorder || 'border-blue-400'} bg-white/80 dark:bg-gray-700/80 shadow-sm w-24`}>
-            <span className="block w-12 h-12 mt-1 mb-1">
+          <div key={p.id} className={`flex flex-col items-center p-1 rounded-xl border ${hostId === p.id ? 'border-yellow-400' : p.profileBorder || 'border-blue-400'} bg-white/80 dark:bg-gray-700/80 shadow-sm w-20 xs:w-24`}>
+            <span className="block w-10 h-10 xs:w-12 xs:h-12 mt-1 mb-1">
               {p.avatar ? (
-                <img src={p.avatar} alt={p.name} className="w-12 h-12 rounded-full object-cover border-2 mx-auto" />
+                <img src={p.avatar} alt={p.name} className="w-10 h-10 xs:w-12 xs:h-12 rounded-full object-cover border-2 mx-auto" />
               ) : (
-                <span className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl mx-auto border-2 ${p.profileBg || 'bg-blue-400'} ${p.profileBorder || 'border-blue-400'}`}>{p.profileEmoji || '😀'}</span>
+                <span className={`w-10 h-10 xs:w-12 xs:h-12 rounded-full flex items-center justify-center text-white text-xl xs:text-2xl mx-auto border-2 ${p.profileBg || 'bg-blue-400'} ${p.profileBorder || 'border-blue-400'}`}>{p.profileEmoji || '😀'}</span>
               )}
             </span>
             <span className="text-gray-900 dark:text-gray-100 text-xs font-medium truncate w-full text-center">{p.name}</span>
