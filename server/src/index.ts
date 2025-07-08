@@ -462,6 +462,18 @@ io.on('connection', (socket) => {
     }
     cb && cb({ error: 'Контакт уже с ведущим или завершён' });
   });
+
+  // Открыть всё слово (завершить игру)
+  socket.on('revealAll', ({ code }, cb) => {
+    code = code.toUpperCase();
+    const lobby = lobbies[code];
+    if (!lobby || !lobby.game || !lobby.game.word) return cb && cb({ error: 'Нет игры' });
+    if (socket.id !== lobby.hostId) return cb && cb({ error: 'Только ведущий может завершить' });
+    lobby.game.revealed = lobby.game.word.length;
+    lobby.contact = undefined;
+    io.to(code).emit('updateLobby', lobby);
+    cb && cb({ ok: true });
+  });
 });
 
 server.listen(PORT, () => {

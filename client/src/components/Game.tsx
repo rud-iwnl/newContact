@@ -28,7 +28,7 @@ interface GameProps {
   contactWords: Record<string, string>;
 }
 
-const Game: React.FC<GameProps> = ({
+const Game: React.FC<GameProps & { handleRevealAll?: () => void }> = ({
   isHost,
   isGameStarted,
   game,
@@ -54,6 +54,7 @@ const Game: React.FC<GameProps> = ({
   canConfirmContact,
   handleResetGame,
   contactWords,
+  handleRevealAll,
 }) => {
   return (
     <div>
@@ -246,6 +247,15 @@ const Game: React.FC<GameProps> = ({
         <div className="mb-4 text-center animate-fade-in">
           <span className="inline-block px-3 py-1 rounded bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 font-semibold">Фаза: игра</span>
         </div>
+      )}
+      {/* Кнопка открыть всё слово для ведущего */}
+      {isHost && game?.word && game?.revealed < game?.word.length && !contact && (
+        <button
+          className="w-full py-2 rounded bg-fuchsia-600 text-white font-semibold hover:bg-fuchsia-700 transition mt-2"
+          onClick={handleRevealAll}
+        >
+          Открыть всё слово (завершить игру)
+        </button>
       )}
     </div>
   );
