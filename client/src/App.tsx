@@ -302,6 +302,19 @@ export default function App() {
     }
   }, [contactWords, contact, game, myId, myLobbyCode]);
 
+  // После завершения контакта, если слово угадано, но не открыто полностью, продолжаем открывать
+  useEffect(() => {
+    if (!game?.word || !contactFinished || !myId || myId !== game.hostId) return;
+    // Сравниваем слова без учёта регистра и пробелов
+    const normalize = (w: string) => w.trim().toLowerCase();
+    const mainWord = normalize(game.word);
+    const ids = contactFinished.hostInvolved ? [contactFinished.from, contactFinished.to, game.hostId] : [contactFinished.from, contactFinished.to];
+    const allGuessed = ids.every(id => normalize(contactFinished.words?.[id] || '') === mainWord);
+    if (allGuessed && game.revealed < game.word.length && socketRef.current) {
+      socketRef.current.emit('confirmContact', { code: myLobbyCode });
+    }
+  }, [contactFinished, game, myId, myLobbyCode]);
+
   // Обработка создания/входа в лобби
   const handleLobbyEnter = (e: React.FormEvent) => {
     e.preventDefault();
