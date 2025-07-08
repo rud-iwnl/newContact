@@ -197,17 +197,19 @@ io.on('connection', (socket) => {
     if (!lobby || !lobby.game || !lobby.game.started) return cb && cb({ error: 'Игра не идёт' });
     const player = lobby.players.find(p => p.id === socket.id);
     if (!player) return cb && cb({ error: 'Нет игрока' });
-    if (socket.id === lobby.hostId) return cb && cb({ error: 'Ведущий не может писать' });
-    const msg: ChatMessage = {
-      id: Math.random().toString(36).slice(2),
+    if (socket.id === lobby.hostId && !lobby.duoMode) return cb && cb({ error: 'Ведущий не может писать' });
+    
+    const message: ChatMessage = {
+      id: Math.random().toString(36).substr(2, 9),
       userId: socket.id,
       userName: player.name,
       text: text.trim(),
-      timestamp: Date.now(),
+      timestamp: Date.now()
     };
-    lobby.chat = lobby.chat || [];
-    lobby.chat.push(msg);
-    io.to(code).emit('chatUpdate', lobby.chat);
+    
+    if (!lobby.chat) lobby.chat = [];
+    lobby.chat.push(message);
+    io.to(code).emit('updateLobby', lobby);
     cb && cb({ ok: true });
   });
 
@@ -215,41 +217,26 @@ io.on('connection', (socket) => {
     code = code.toUpperCase();
     const lobby = lobbies[code];
     if (!lobby || !lobby.game || !lobby.game.started) return cb && cb({ error: 'Игра не идёт' });
-    lobby.usedContacts = lobby.usedContacts || [];
-    if (lobby.usedContacts.includes(messageId)) return cb && cb({ error: 'Контакт уже был по этому сообщению' });
-    if (lobby.contact && !lobby.contact.finished) return cb && cb({ error: 'Контакт уже активен' });
-    const msg = (lobby.chat || []).find(m => m.id === messageId);
-    if (!msg) return cb && cb({ error: 'Сообщение не найдено' });
-    if (msg.userId === socket.id) return cb && cb({ error: 'Нельзя контактировать с собой' });
-    // Запрещаем контакт, если слово уже использовано
-    const word = msg.text.trim().toLowerCase();
-    if (lobby.game.usedWords.includes(word)) return cb && cb({ error: 'Это слово уже использовано' });
+    if (lobby.contact) return cb && cb({ error: 'Уже есть активный контакт' });
+    if (socket.id === lobby.hostId && !lobby.duoMode) return cb && cb({ error: 'Ведущий не может инициировать контакт' });
+    
+    const message = lobby.chat?.find(m => m.id === messageId);
+    if (!message) return cb && cb({ error: 'Сообщение не найдено' });
+    if (message.userId === socket.id) return cb && cb({ error: 'Нельзя контактировать со своим сообщением' });
+    
     const contact: ContactState = {
       messageId,
       from: socket.id,
-      to: msg.userId,
+      to: message.userId,
       words: {},
-      timer: null as NodeJS.Timeout | null,
-      expiresAt: Date.now() + 20000,
+      timer: null,
+      expiresAt: Date.now() + 30000, // 30 секунд
       finished: false,
-      hostInvolved: false,
+      hostInvolved: false
     };
+    
     lobby.contact = contact;
-    io.to(code).emit('contactStarted', { from: socket.id, to: msg.userId, messageId, expiresAt: contact.expiresAt });
-    // Запускаем таймер
-    contact.timer = setTimeout(() => {
-      contact.finished = true;
-      lobby.usedContacts!.push(messageId);
-      const fromPlayer = lobby.players.find(p => p.id === contact.from);
-      const toPlayer = lobby.players.find(p => p.id === contact.to);
-      io.to(code).emit('contactFinished', {
-        words: contact.words,
-        from: contact.from,
-        to: contact.to,
-        fromName: fromPlayer?.name || 'Игрок 1',
-        toName: toPlayer?.name || 'Игрок 2',
-      });
-    }, 20000);
+    io.to(code).emit('contactStarted', contact);
     cb && cb({ ok: true });
   });
 
@@ -496,55 +483,28 @@ io.on('connection', (socket) => {
     code = code.toUpperCase();
     const lobby = lobbies[code];
     if (!lobby || !lobby.game || !lobby.game.started) return cb && cb({ error: 'Игра не идёт' });
-    if (lobby.hostId !== socket.id) return cb && cb({ error: 'Только ведущий может использовать эту функцию' });
-    lobby.usedContacts = lobby.usedContacts || [];
-    if (lobby.usedContacts.includes(messageId)) return cb && cb({ error: 'Контакт уже был по этому сообщению' });
-    const msg = (lobby.chat || []).find(m => m.id === messageId);
-    if (!msg) return cb && cb({ error: 'Сообщение не найдено' });
-    const word = msg.text.trim().toLowerCase();
-    if (lobby.game.usedWords.includes(word)) return cb && cb({ error: 'Это слово уже использовано' });
-    // Если нет активного контакта — создаём контакт между ведущим и игроком
-    if (!lobby.contact || lobby.contact.finished) {
-      const contact = {
-        messageId,
-        from: lobby.hostId,
-        to: msg.userId,
-        words: {},
-        timer: null as NodeJS.Timeout | null,
-        expiresAt: Date.now() + 20000,
-        finished: false,
-        hostInvolved: true,
-      };
-      lobby.contact = contact;
-      io.to(code).emit('contactStarted', { from: lobby.hostId, to: msg.userId, messageId, expiresAt: contact.expiresAt, hostInvolved: true });
-      // Таймер
-      contact.timer = setTimeout(() => {
-        contact.finished = true;
-        lobby.usedContacts!.push(messageId);
-        const fromPlayer = lobby.players.find(p => p.id === contact.from);
-        const toPlayer = lobby.players.find(p => p.id === contact.to);
-        io.to(code).emit('contactFinished', {
-          words: contact.words,
-          from: contact.from,
-          to: contact.to,
-          fromName: fromPlayer?.name || 'Ведущий',
-          toName: toPlayer?.name || 'Игрок',
-          hostInvolved: true,
-        });
-      }, 20000);
-      cb && cb({ ok: true });
-      return;
-    }
-    // Если уже идёт контакт между двумя игроками — втроём
-    if (lobby.contact && !lobby.contact.finished && !lobby.contact.hostInvolved) {
-      lobby.contact.hostInvolved = true;
-      lobby.contact.hostWord = undefined;
-      io.to(code).emit('contactUpdate', { words: lobby.contact.words, hostInvolved: true });
-      // Таймер остаётся прежним
-      cb && cb({ ok: true });
-      return;
-    }
-    cb && cb({ error: 'Контакт уже с ведущим или завершён' });
+    if (lobby.duoMode) return cb && cb({ error: 'В режиме дуэли нет ведущего' });
+    if (socket.id !== lobby.hostId) return cb && cb({ error: 'Только ведущий может использовать "Я знаю"' });
+    if (lobby.contact) return cb && cb({ error: 'Уже есть активный контакт' });
+    
+    const message = lobby.chat?.find(m => m.id === messageId);
+    if (!message) return cb && cb({ error: 'Сообщение не найдено' });
+    if (message.userId === socket.id) return cb && cb({ error: 'Нельзя контактировать со своим сообщением' });
+    
+    const contact: ContactState = {
+      messageId,
+      from: message.userId,
+      to: socket.id,
+      words: {},
+      timer: null,
+      expiresAt: Date.now() + 30000, // 30 секунд
+      finished: false,
+      hostInvolved: true
+    };
+    
+    lobby.contact = contact;
+    io.to(code).emit('contactStarted', contact);
+    cb && cb({ ok: true });
   });
 
   // Открыть всё слово (завершить игру)

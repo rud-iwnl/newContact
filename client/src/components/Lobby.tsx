@@ -105,6 +105,14 @@ const Lobby: React.FC<LobbyProps> = ({
             {p.profileStatus && <span className="text-[10px] text-gray-500 italic truncate w-full text-center">{p.profileStatus}</span>}
             {p.id === myId && <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">(Вы)</span>}
             {p.id === hostId && !duoMode && <span className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(Ведущий)</span>}
+            {isHost && p.id !== myId && !duoMode && (
+              <button
+                className="mt-1 px-2 py-1 text-[10px] rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition"
+                onClick={() => handleChangeHost(p.id)}
+              >
+                Сделать ведущим
+              </button>
+            )}
           </div>
         ))}
       </div>
