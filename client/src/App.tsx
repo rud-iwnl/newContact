@@ -287,7 +287,7 @@ export default function App() {
     }
   }, [chat]);
 
-  // Автоматическое подтверждение контакта и открытие всего слова, если оба игрока ввели загаданное слово
+  // Автоматическое подтверждение контакта и поэтапное открытие всего слова, если оба игрока ввели загаданное слово
   useEffect(() => {
     if (!contact || !game?.word || !contactWords) return;
     const ids = contact.hostInvolved ? [contact.from, contact.to, game.hostId] : [contact.from, contact.to];
@@ -295,12 +295,8 @@ export default function App() {
     if (!allEntered) return;
     const mainWord = game.word.trim().toLowerCase();
     const allGuessed = ids.every(id => contactWords[id]?.trim().toLowerCase() === mainWord);
-    if (allGuessed && socketRef.current && myId === game.hostId) {
-      // Открываем всё слово (отправляем confirmContact столько раз, сколько нужно)
-      const toReveal = (game.word.length || 0) - (game.revealed || 0);
-      for (let i = 0; i < toReveal; i++) {
-        socketRef.current.emit('confirmContact', { code: myLobbyCode });
-      }
+    if (allGuessed && socketRef.current && myId === game.hostId && game.revealed < game.word.length) {
+      socketRef.current.emit('confirmContact', { code: myLobbyCode });
     }
   }, [contactWords, contact, game, myId, myLobbyCode]);
 
