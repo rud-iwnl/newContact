@@ -112,14 +112,14 @@ const Chat: React.FC<ChatProps> = ({
                   {/* Кнопка "Я знаю" для ведущего */}
                   {isHost && !duoMode && (
                     <button
-                      className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm font-semibold"
+                      className="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm font-semibold"
                       onClick={() => handleHostKnows(msg.id)}
                     >
                       Я знаю
                     </button>
                   )}
                   {/* Кнопка контакт */}
-                  {!isHost && msg.userId !== myId && !usedContacts.includes(msg.id) && !isWordUsed(msg.text) && (
+                  {(!isHost || duoMode) && msg.userId !== myId && !usedContacts.includes(msg.id) && !isWordUsed(msg.text) && (
                     <button
                       className="ml-1 px-2 py-1 text-xs rounded bg-green-500 text-white hover:bg-green-600 transition whitespace-nowrap"
                       onClick={() => handleContact(msg.id)}
@@ -149,7 +149,7 @@ const Chat: React.FC<ChatProps> = ({
             })}
             <div ref={chatEndRef} />
           </div>
-          {!isHost && (
+          {(!isHost || duoMode) && (
             <form className="flex flex-col xs:flex-row gap-2 pb-2 md:pb-0" onSubmit={handleSendMessage}>
               <input
                 ref={chatInputRef}
