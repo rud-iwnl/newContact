@@ -287,6 +287,23 @@ export default function App() {
     }
   }, [chat]);
 
+  // Автоматическое подтверждение контакта, если оба игрока ввели загаданное слово
+  useEffect(() => {
+    if (!contact || !game?.word || !contactWords) return;
+    // Собираем id участников контакта (без ведущего)
+    const ids = contact.hostInvolved ? [contact.from, contact.to, game.hostId] : [contact.from, contact.to];
+    // Все ли участники ввели слово?
+    const allEntered = ids.every(id => contactWords[id]);
+    if (!allEntered) return;
+    // Все ли слова совпадают с загаданным?
+    const mainWord = game.word.trim().toLowerCase();
+    const allGuessed = ids.every(id => contactWords[id]?.trim().toLowerCase() === mainWord);
+    if (allGuessed && socketRef.current && myId === game.hostId) {
+      // Только ведущий отправляет подтверждение
+      socketRef.current.emit('confirmContact', { code: myLobbyCode });
+    }
+  }, [contactWords, contact, game, myId, myLobbyCode]);
+
   // Обработка создания/входа в лобби
   const handleLobbyEnter = (e: React.FormEvent) => {
     e.preventDefault();
