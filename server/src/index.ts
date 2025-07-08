@@ -30,6 +30,7 @@ type Player = {
   profileBg?: string;
   profileStatus?: string;
   profileEmoji?: string;
+  score?: number;
 };
 type GameState = {
   started: boolean;
@@ -81,7 +82,7 @@ io.on('connection', (socket) => {
   socket.on('createLobby', ({ name, avatar, profileBorder, profileBg, profileStatus, profileEmoji }, cb) => {
     let code;
     do { code = generateLobbyCode(); } while (lobbies[code]);
-    const player: Player = { id: socket.id, name, avatar, profileBorder, profileBg, profileStatus, profileEmoji };
+    const player: Player = { id: socket.id, name, avatar, profileBorder, profileBg, profileStatus, profileEmoji, score: 0 };
     lobbies[code] = { code, players: [player], hostId: socket.id };
     socket.join(code);
     cb({ code, players: lobbies[code].players, hostId: socket.id });
@@ -93,7 +94,7 @@ io.on('connection', (socket) => {
     const lobby = lobbies[code];
     if (!lobby) return cb({ error: 'Лобби не найдено' });
     if (lobby.players.length >= 12) return cb({ error: 'Лобби заполнено' });
-    const player: Player = { id: socket.id, name, avatar, profileBorder, profileBg, profileStatus, profileEmoji };
+    const player: Player = { id: socket.id, name, avatar, profileBorder, profileBg, profileStatus, profileEmoji, score: 0 };
     lobby.players.push(player);
     socket.join(code);
     cb({ code, players: lobby.players, hostId: lobby.hostId });
@@ -166,6 +167,8 @@ io.on('connection', (socket) => {
     code = code.toUpperCase();
     const lobby = lobbies[code];
     if (!lobby || lobby.hostId !== socket.id) return cb && cb({ error: 'Нет прав' });
+    // Сброс очков
+    lobby.players.forEach(p => { p.score = 0; });
     lobby.game = undefined;
     lobby.chat = [];
     io.to(code).emit('updateLobby', lobby);
@@ -356,11 +359,15 @@ io.on('connection', (socket) => {
     const contact = lobby?.contact;
     if (!lobby || !lobby.game || !contact || !contact.finished) return cb && cb({ error: 'Нет завершённого контакта' });
     if (socket.id !== lobby.hostId) return cb && cb({ error: 'Только ведущий может подтверждать' });
-    // --- Исправление: если все слова совпали с загаданным, открыть всё слово ---
     const word = lobby.game.word?.trim().toLowerCase();
     const ids = contact.hostInvolved ? [contact.from, contact.to, lobby.hostId] : [contact.from, contact.to];
     const allGuessed = ids.every(id => (contact.words[id] || '').trim().toLowerCase() === word);
+    // --- начисление очков ---
     if (allGuessed && word) {
+      ids.forEach(id => {
+        const player = lobby.players.find(p => p.id === id);
+        if (player) player.score = (player.score || 0) + 1;
+      });
       lobby.game.revealed = word.length;
     } else if (lobby.game.revealed < (lobby.game.word?.length || 0)) {
       lobby.game.revealed++;
@@ -370,7 +377,6 @@ io.on('connection', (socket) => {
     if (usedWord && !lobby.game.usedWords.includes(usedWord)) {
       lobby.game.usedWords.push(usedWord);
     }
-    // Сброс только контакта
     lobby.contact = undefined;
     io.to(code).emit('updateLobby', lobby);
     cb && cb({ ok: true });

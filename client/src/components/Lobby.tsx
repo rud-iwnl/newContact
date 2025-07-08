@@ -8,6 +8,7 @@ interface Player {
   profileBg?: string;
   profileStatus?: string;
   profileEmoji?: string;
+  score?: number;
 }
 
 interface LobbyProps {
@@ -74,6 +75,9 @@ const Lobby: React.FC<LobbyProps> = ({
               )}
             </span>
             <span className="text-gray-900 dark:text-gray-100 text-xs font-medium truncate w-full text-center">{p.name}</span>
+            {typeof p.score === 'number' && (
+              <span className="text-xs text-blue-600 dark:text-blue-300 font-bold w-full text-center">🏆 {p.score}</span>
+            )}
             {p.profileStatus && <span className="text-[10px] text-gray-500 italic truncate w-full text-center">{p.profileStatus}</span>}
             {hostId === p.id && <span className="text-[10px] text-yellow-500 font-bold">Ведущий</span>}
             {isHost && p.id !== myId && (
