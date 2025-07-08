@@ -364,6 +364,21 @@ io.on('connection', (socket) => {
     const word = lobby.game.word?.trim().toLowerCase();
     const ids = contact.hostInvolved ? [contact.from, contact.to, lobby.hostId] : [contact.from, contact.to];
     const allGuessed = ids.every(id => (contact.words[id] || '').trim().toLowerCase() === word);
+    // --- логика для контакта с ведущим ---
+    if (contact.hostInvolved) {
+      const playerWord = (contact.words[contact.from] || '').trim().toLowerCase();
+      const hostWord = (contact.words[lobby.hostId] || '').trim().toLowerCase();
+      // Если слова игрока и ведущего совпали, но не совпали с загаданным словом
+      if (playerWord && hostWord && playerWord === hostWord && playerWord !== word) {
+        // Добавить в usedWords
+        if (!lobby.game.usedWords.includes(playerWord)) {
+          lobby.game.usedWords.push(playerWord);
+        }
+        lobby.contact = undefined;
+        io.to(code).emit('updateLobby', lobby);
+        return cb && cb({ ok: true });
+      }
+    }
     // --- начисление очков при каждом успешном контакте ---
     const bothGuessed = contact.words[contact.from] && contact.words[contact.to] && (contact.words[contact.from].trim().toLowerCase() === contact.words[contact.to].trim().toLowerCase());
     if (bothGuessed) {
