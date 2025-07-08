@@ -227,6 +227,11 @@ io.on('connection', (socket) => {
     if (!message) return cb && cb({ error: 'Сообщение не найдено' });
     if (message.userId === socket.id) return cb && cb({ error: 'Нельзя контактировать со своим сообщением' });
     
+    // Проверяем, что по этому сообщению ещё не было контакта
+    if (lobby.usedContacts && lobby.usedContacts.includes(messageId)) {
+      return cb && cb({ error: 'По этому сообщению уже был контакт' });
+    }
+    
     const contact: ContactState = {
       messageId,
       from: socket.id,
@@ -256,6 +261,31 @@ io.on('connection', (socket) => {
           fromName: fromPlayer?.name || 'Игрок 1',
           toName: toPlayer?.name || 'Игрок 2',
         });
+        
+        // В режиме дуэли автоматически подтверждаем контакт, если слова совпали
+        if (lobby.duoMode) {
+          const playerWord = (lobby.contact.words[contact.from] || '').trim().toLowerCase();
+          const otherPlayerWord = (lobby.contact.words[contact.to] || '').trim().toLowerCase();
+          
+          if (playerWord === otherPlayerWord) {
+            const word = lobby.game?.word?.trim().toLowerCase();
+            // Если угадали загаданное слово
+            if (playerWord === word) {
+              lobby.game!.revealed = word!.length;
+            } else {
+              // Обычный контакт
+              if (lobby.game!.revealed < (lobby.game!.word?.length || 0)) {
+                lobby.game!.revealed++;
+              }
+            }
+            // Добавить в использованные
+            if (!lobby.game!.usedWords.includes(playerWord)) {
+              lobby.game!.usedWords.push(playerWord);
+            }
+            lobby.contact = undefined;
+            io.to(code).emit('updateLobby', lobby);
+          }
+        }
       }
     }, 30000);
     
@@ -293,6 +323,31 @@ io.on('connection', (socket) => {
           toName: toPlayer?.name || 'Игрок 2',
           hostInvolved: false,
         });
+        
+        // В режиме дуэли автоматически подтверждаем контакт, если слова совпали
+        if (lobby.duoMode) {
+          const playerWord = (lobby.contact.words[from] || '').trim().toLowerCase();
+          const otherPlayerWord = (lobby.contact.words[to] || '').trim().toLowerCase();
+          
+          if (playerWord === otherPlayerWord) {
+            const word = lobby.game?.word?.trim().toLowerCase();
+            // Если угадали загаданное слово
+            if (playerWord === word) {
+              lobby.game!.revealed = word!.length;
+            } else {
+              // Обычный контакт
+              if (lobby.game!.revealed < (lobby.game!.word?.length || 0)) {
+                lobby.game!.revealed++;
+              }
+            }
+            // Добавить в использованные
+            if (!lobby.game!.usedWords.includes(playerWord)) {
+              lobby.game!.usedWords.push(playerWord);
+            }
+            lobby.contact = undefined;
+            io.to(code).emit('updateLobby', lobby);
+          }
+        }
       }
     } else {
       // Контакт с ведущим (2 или 3 участника)
@@ -512,6 +567,11 @@ io.on('connection', (socket) => {
     const message = lobby.chat?.find(m => m.id === messageId);
     if (!message) return cb && cb({ error: 'Сообщение не найдено' });
     if (message.userId === socket.id) return cb && cb({ error: 'Нельзя контактировать со своим сообщением' });
+    
+    // Проверяем, что по этому сообщению ещё не было контакта
+    if (lobby.usedContacts && lobby.usedContacts.includes(messageId)) {
+      return cb && cb({ error: 'По этому сообщению уже был контакт' });
+    }
     
     const contact: ContactState = {
       messageId,
