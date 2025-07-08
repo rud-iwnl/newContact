@@ -353,16 +353,22 @@ io.on('connection', (socket) => {
   socket.on('confirmContact', ({ code }, cb) => {
     code = code.toUpperCase();
     const lobby = lobbies[code];
-    if (!lobby || !lobby.game || !lobby.contact || !lobby.contact.finished) return cb && cb({ error: 'Нет завершённого контакта' });
+    const contact = lobby?.contact;
+    if (!lobby || !lobby.game || !contact || !contact.finished) return cb && cb({ error: 'Нет завершённого контакта' });
     if (socket.id !== lobby.hostId) return cb && cb({ error: 'Только ведущий может подтверждать' });
-    // Открываем следующую букву
-    if (lobby.game.revealed < (lobby.game.word?.length || 0)) {
+    // --- Исправление: если все слова совпали с загаданным, открыть всё слово ---
+    const word = lobby.game.word?.trim().toLowerCase();
+    const ids = contact.hostInvolved ? [contact.from, contact.to, lobby.hostId] : [contact.from, contact.to];
+    const allGuessed = ids.every(id => (contact.words[id] || '').trim().toLowerCase() === word);
+    if (allGuessed && word) {
+      lobby.game.revealed = word.length;
+    } else if (lobby.game.revealed < (lobby.game.word?.length || 0)) {
       lobby.game.revealed++;
     }
     // Добавляем только одно использованное слово (в нижнем регистре, без пробелов)
-    const word = lobby.contact.words[lobby.contact.from]?.trim().toLowerCase();
-    if (word && !lobby.game.usedWords.includes(word)) {
-      lobby.game.usedWords.push(word);
+    const usedWord = contact.words[contact.from]?.trim().toLowerCase();
+    if (usedWord && !lobby.game.usedWords.includes(usedWord)) {
+      lobby.game.usedWords.push(usedWord);
     }
     // Сброс только контакта
     lobby.contact = undefined;
