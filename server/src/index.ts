@@ -209,7 +209,10 @@ io.on('connection', (socket) => {
     
     if (!lobby.chat) lobby.chat = [];
     lobby.chat.push(message);
+    
+    // Отправляем и updateLobby, и chatUpdate для совместимости
     io.to(code).emit('updateLobby', lobby);
+    io.to(code).emit('chatUpdate', lobby.chat);
     cb && cb({ ok: true });
   });
 
@@ -237,6 +240,25 @@ io.on('connection', (socket) => {
     
     lobby.contact = contact;
     io.to(code).emit('contactStarted', contact);
+    
+    // Запускаем таймер
+    contact.timer = setTimeout(() => {
+      if (lobby.contact && !lobby.contact.finished) {
+        lobby.contact.finished = true;
+        lobby.usedContacts = lobby.usedContacts || [];
+        lobby.usedContacts.push(messageId);
+        const fromPlayer = lobby.players.find(p => p.id === contact.from);
+        const toPlayer = lobby.players.find(p => p.id === contact.to);
+        io.to(code).emit('contactFinished', {
+          words: lobby.contact.words,
+          from: contact.from,
+          to: contact.to,
+          fromName: fromPlayer?.name || 'Игрок 1',
+          toName: toPlayer?.name || 'Игрок 2',
+        });
+      }
+    }, 30000);
+    
     cb && cb({ ok: true });
   });
 
@@ -504,6 +526,26 @@ io.on('connection', (socket) => {
     
     lobby.contact = contact;
     io.to(code).emit('contactStarted', contact);
+    
+    // Запускаем таймер
+    contact.timer = setTimeout(() => {
+      if (lobby.contact && !lobby.contact.finished) {
+        lobby.contact.finished = true;
+        lobby.usedContacts = lobby.usedContacts || [];
+        lobby.usedContacts.push(messageId);
+        const fromPlayer = lobby.players.find(p => p.id === contact.from);
+        const toPlayer = lobby.players.find(p => p.id === contact.to);
+        io.to(code).emit('contactFinished', {
+          words: lobby.contact.words,
+          from: contact.from,
+          to: contact.to,
+          fromName: fromPlayer?.name || 'Игрок',
+          toName: toPlayer?.name || 'Ведущий',
+          hostInvolved: true,
+        });
+      }
+    }, 30000);
+    
     cb && cb({ ok: true });
   });
 
