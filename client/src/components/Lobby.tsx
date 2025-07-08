@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
 
+// Функция генерации эмодзи по нику
+function getEmojiAvatar(name: string) {
+  const emojis = [
+    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😜','😝','😛','🤑','🤗','🤩','🤔','🤨','😐','😑','😶','🙄','😏','😣','😥','😮','🤐','😯','😪','😫','🥱','😴','😌','😛','😜','😝','🤤','😒','😓','😔','😕','🙃','🫠','🫥','🫡','🫢','🫣','🫤','🫦','🫧','🫨','🫩','🫪','🫫','🫬','🫭','🫮','🫯','🫰','🫱','🫲','🫳','🫴','🫵','🫶','🫷','🫸','🫹','🫺','🫻','🫼','🫽','🫾','🫿','🬀','🬁','🬂','🬃','🬄','🬅','🬆','🬇','🬈','🬉','🬊','🬋','🬌','🬍','🬎','🬏','🬐','🬑','🬒','🬓','🬔','🬕','🬖','🬗','🬘','🬙','🬚','🬛','🬜','🬝','🬞','🬟','🬠','🬡','🬢','🬣','🬤','🬥','🬦','🬧','🬨','🬩','🬪','🬫','🬬','🬭','🬮','🬯','🬰','🬱','🬲','🬳','🬴','🬵','🬶','🬷','🬸','🬹','🬺','🬻','🬼','🬽','🬾','🬿','🭀','🭁','🭂','🭃','🭄','🭅','🭆','🭇','🭈','🭉','🭊','🭋','🭌','🭍','🭎','🭏','🭐','🭑','🭒','🭓','🭔','🭕','🭖','🭗','🭘','🭙','🭚','🭛','🭜','🭝','🭞','🭟','🭠','🭡','🭢','🭣','🭤','🭥','🭦','🭧','🭨','🭩','🭪','🭫','🭬','🭭','🭮','🭯','🭰','🭱','🭲','🭳','🭴','🭵','🭶','🭷','🭸','🭹','🭺','🭻','🭼','🭽','🭾','🭿','🯀','🯁','🯂','🯃','🯄','🯅','🯆','🯇','🯈','🯉','🯊','🯋','🯌','🯍','🯎','🯏','🯐','🯑','🯒','🯓','🯔','🯕','🯖','🯗','🯘','🯙','🯚','🯛','🯜','🯝','🯞','🯟','🯠','🯡','🯢','🯣','🯤','🯥','🯦','🯧','🯨','🯩','🯪','🯫','🯬','🯭','🯮','🯯','🯰','🯱','🯲','🯳','🯴','🯵','🯶','🯷','🯸','🯹','🯺','🯻','🯼','🯽','🯾','🯿'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const idx = Math.abs(hash) % emojis.length;
+  return emojis[idx];
+}
+
 interface Player {
   id: string;
   name: string;
@@ -73,28 +85,26 @@ const Lobby: React.FC<LobbyProps> = ({
       </div>
       <div className="flex flex-wrap gap-2 items-center justify-center xs:justify-start">
         {players.map((p) => (
-          <div key={p.id} className={`flex flex-col items-center p-1 rounded-xl border ${hostId === p.id ? 'border-yellow-400' : p.profileBorder || 'border-blue-400'} bg-white/80 dark:bg-gray-700/80 shadow-sm w-20 xs:w-24`}>
-            <span className="block w-10 h-10 xs:w-12 xs:h-12 mt-1 mb-1">
+          <div key={p.id} className="bg-white dark:bg-gray-800 rounded-lg p-2 xs:p-3 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center gap-1 min-w-0">
+            <div className="relative">
               {p.avatar ? (
-                <img src={p.avatar} alt={p.name} className="w-10 h-10 xs:w-12 xs:h-12 rounded-full object-cover border-2 mx-auto" />
+                <img src={p.avatar} alt="avatar" className={`w-12 h-12 xs:w-14 xs:h-14 rounded-full object-cover border-2 ${p.profileBorder || 'border-gray-300'} ${p.profileBg || 'bg-gray-300'}`} />
               ) : (
-                <span className={`w-10 h-10 xs:w-12 xs:h-12 rounded-full flex items-center justify-center text-white text-xl xs:text-2xl mx-auto border-2 ${p.profileBg || 'bg-blue-400'} ${p.profileBorder || 'border-blue-400'}`}>{p.profileEmoji || '😀'}</span>
+                <span className={`w-12 h-12 xs:w-14 xs:h-14 rounded-full flex items-center justify-center text-white text-xl xs:text-2xl border-2 ${p.profileBorder || 'border-gray-300'} ${p.profileBg || 'bg-gray-300'}`}>
+                  {p.profileEmoji || getEmojiAvatar(p.name)}
+                </span>
               )}
-            </span>
+              {p.id === hostId && !duoMode && (
+                <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">👑</span>
+              )}
+            </div>
             <span className="text-gray-900 dark:text-gray-100 text-xs font-medium truncate w-full text-center">{p.name}</span>
             {typeof p.score === 'number' && (
               <span className="text-xs text-blue-600 dark:text-blue-300 font-bold w-full text-center">🏆 {p.score}</span>
             )}
             {p.profileStatus && <span className="text-[10px] text-gray-500 italic truncate w-full text-center">{p.profileStatus}</span>}
-            {hostId === p.id && <span className="text-[10px] text-yellow-500 font-bold">Ведущий</span>}
-            {isHost && p.id !== myId && (
-              <button
-                className="mt-1 px-1 py-0.5 text-[10px] rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition"
-                onClick={() => handleChangeHost(p.id)}
-              >
-                Сделать ведущим
-              </button>
-            )}
+            {p.id === myId && <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">(Вы)</span>}
+            {p.id === hostId && !duoMode && <span className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(Ведущий)</span>}
           </div>
         ))}
       </div>

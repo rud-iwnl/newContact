@@ -303,10 +303,10 @@ export default function App() {
     const normalize = (w: string) => w.trim().toLowerCase();
     const mainWord = normalize(game.word);
     const allGuessed = ids.every(id => normalize(contactWords[id] || '') === mainWord);
-    if (allGuessed && socketRef.current && myId === game.hostId && game.revealed < game.word.length) {
+    if (allGuessed && socketRef.current && (myId === game.hostId || duoMode) && game.revealed < game.word.length) {
       socketRef.current.emit('confirmContact', { code: myLobbyCode });
     }
-  }, [contactWords, contact, game, myId, myLobbyCode]);
+  }, [contactWords, contact, game, myId, myLobbyCode, duoMode]);
 
   // После завершения контакта, если слово угадано, но не открыто полностью, продолжаем открывать
   useEffect(() => {
@@ -609,6 +609,7 @@ export default function App() {
               handleSendMessage={handleSendMessage}
               chatError={chatError}
               handleHostKnows={handleHostKnows}
+              duoMode={duoMode}
             />
           </div>
         </div>

@@ -374,7 +374,7 @@ io.on('connection', (socket) => {
     const lobby = lobbies[code];
     const contact = lobby?.contact;
     if (!lobby || !lobby.game || !contact || !contact.finished) return cb && cb({ error: 'Нет завершённого контакта' });
-    if (socket.id !== lobby.hostId) return cb && cb({ error: 'Только ведущий может подтверждать' });
+    if (socket.id !== lobby.hostId && !lobby.duoMode) return cb && cb({ error: 'Только ведущий может подтверждать' });
     
     // В режиме дуэли автоматическая проверка
     if (lobby.duoMode) {
