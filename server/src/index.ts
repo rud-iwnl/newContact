@@ -66,8 +66,22 @@ type Lobby = {
   chat?: ChatMessage[];
   contact?: ContactState;
   usedContacts?: string[];
+  duoMode?: boolean;
 };
 const lobbies: Record<string, Lobby> = {};
+
+// База слов для режима дуэли
+const DUO_WORDS = {
+  easy: ['кот', 'дом', 'сад', 'лес', 'море', 'небо', 'солнце', 'звезда', 'цветок', 'дерево', 'книга', 'ручка', 'стол', 'окно', 'дверь', 'машина', 'телефон', 'компьютер', 'музыка', 'спорт'],
+  medium: ['программа', 'интернет', 'путешествие', 'образование', 'телевидение', 'ресторан', 'больница', 'университет', 'библиотека', 'театр', 'музей', 'стадион', 'аэропорт', 'вокзал', 'магазин', 'банк', 'почта', 'полиция', 'пожарный', 'врач'],
+  hard: ['информатика', 'математика', 'философия', 'психология', 'биология', 'химия', 'физика', 'история', 'география', 'литература', 'экономика', 'политика', 'медицина', 'юриспруденция', 'архитектура', 'инженерия', 'технология', 'исследование', 'эксперимент', 'открытие']
+};
+
+// Функция выбора случайного слова по сложности
+function getRandomWord(difficulty: 'easy' | 'medium' | 'hard'): string {
+  const words = DUO_WORDS[difficulty];
+  return words[Math.floor(Math.random() * words.length)];
+}
 
 function generateLobbyCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -361,6 +375,35 @@ io.on('connection', (socket) => {
     const contact = lobby?.contact;
     if (!lobby || !lobby.game || !contact || !contact.finished) return cb && cb({ error: 'Нет завершённого контакта' });
     if (socket.id !== lobby.hostId) return cb && cb({ error: 'Только ведущий может подтверждать' });
+    
+    // В режиме дуэли автоматическая проверка
+    if (lobby.duoMode) {
+      const word = lobby.game.word?.trim().toLowerCase();
+      const playerWord = (contact.words[contact.from] || '').trim().toLowerCase();
+      const otherPlayerWord = (contact.words[contact.to] || '').trim().toLowerCase();
+      
+      // Если слова совпали
+      if (playerWord && otherPlayerWord && playerWord === otherPlayerWord) {
+        // Если угадали загаданное слово
+        if (playerWord === word) {
+          lobby.game.revealed = word.length;
+        } else {
+          // Обычный контакт
+          if (lobby.game.revealed < (lobby.game.word?.length || 0)) {
+            lobby.game.revealed++;
+          }
+        }
+        // Добавить в использованные
+        if (!lobby.game.usedWords.includes(playerWord)) {
+          lobby.game.usedWords.push(playerWord);
+        }
+        lobby.contact = undefined;
+        io.to(code).emit('updateLobby', lobby);
+        return cb && cb({ ok: true });
+      }
+    }
+    
+    // Обычная логика для не-дуэли
     const word = lobby.game.word?.trim().toLowerCase();
     const ids = contact.hostInvolved ? [contact.from, contact.to, lobby.hostId] : [contact.from, contact.to];
     const allGuessed = ids.every(id => (contact.words[id] || '').trim().toLowerCase() === word);
@@ -514,6 +557,26 @@ io.on('connection', (socket) => {
     lobby.contact = undefined;
     io.to(code).emit('updateLobby', lobby);
     cb && cb({ ok: true });
+  });
+
+  // Начать игру вдвоём
+  socket.on('startDuoGame', ({ code, difficulty }, cb) => {
+    code = code.toUpperCase();
+    const lobby = lobbies[code];
+    if (!lobby || lobby.hostId !== socket.id) return cb && cb({ error: 'Нет прав' });
+    if (lobby.players.length !== 2) return cb && cb({ error: 'Режим дуэли только для 2 игроков' });
+    
+    const word = getRandomWord(difficulty);
+    lobby.duoMode = true;
+    lobby.game = {
+      started: true,
+      word: word,
+      revealed: 1,
+      usedWords: [],
+      phase: 'playing'
+    };
+    io.to(code).emit('updateLobby', lobby);
+    cb && cb({ ok: true, word });
   });
 });
 

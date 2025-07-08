@@ -131,6 +131,11 @@ export default function App() {
   const [lastSeenMsgId, setLastSeenMsgId] = useState<string | null>(null);
   const [newMsgIds, setNewMsgIds] = useState<string[]>([]);
 
+  // Состояния для режима дуэли
+  const [duoMode, setDuoMode] = useState<boolean>(false);
+  const [showDuoModal, setShowDuoModal] = useState<boolean>(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
@@ -170,6 +175,7 @@ export default function App() {
           setMyLobbyCode(lobby.code);
           setGame(lobby.game || null);
           setUsedContacts(lobby.usedContacts || []);
+          setDuoMode(lobby.duoMode || false);
           setContact(null);
           setContactFinished(null);
           setContactTimer(null);
@@ -370,6 +376,16 @@ export default function App() {
     });
   };
 
+  // Ведущий начинает игру вдвоём
+  const handleStartDuoGame = (difficulty: 'easy' | 'medium' | 'hard') => {
+    setGameError(null);
+    if (!socketRef.current || !myLobbyCode) return;
+    socketRef.current.emit('startDuoGame', { code: myLobbyCode, difficulty }, (res: any) => {
+      if (res?.error) setGameError(res.error);
+      setShowDuoModal(false);
+    });
+  };
+
   // Ведущий задаёт слово
   const handleSetWord = (e: React.FormEvent) => {
     e.preventDefault();
@@ -532,6 +548,7 @@ export default function App() {
               setTheme={setTheme}
               handleChangeHost={handleChangeHost}
               handleLeaveLobby={handleLeaveLobby}
+              duoMode={duoMode}
             />
             <Game
               isHost={isHost}
@@ -563,6 +580,10 @@ export default function App() {
                 if (!game?.word || !socketRef.current || !myLobbyCode) return;
                 socketRef.current.emit('revealAll', { code: myLobbyCode });
               }}
+              players={players}
+              showDuoModal={showDuoModal}
+              setShowDuoModal={setShowDuoModal}
+              handleStartDuoGame={handleStartDuoGame}
             />
           </div>
           {/* Разделитель */}

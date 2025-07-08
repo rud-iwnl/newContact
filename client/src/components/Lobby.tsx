@@ -20,6 +20,7 @@ interface LobbyProps {
   setTheme: (theme: string) => void;
   handleChangeHost: (id: string) => void;
   handleLeaveLobby: () => void;
+  duoMode?: boolean;
 }
 
 const Lobby: React.FC<LobbyProps> = ({
@@ -31,6 +32,7 @@ const Lobby: React.FC<LobbyProps> = ({
   setTheme,
   handleChangeHost,
   handleLeaveLobby,
+  duoMode = false,
 }) => {
   const isHost = hostId === myId;
   const [copied, setCopied] = useState(false);
@@ -45,7 +47,12 @@ const Lobby: React.FC<LobbyProps> = ({
     <div>
       <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center mb-1 gap-2 xs:gap-0">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Лобби: <span className="tracking-widest select-all">{myLobbyCode}</span></h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Лобби: <span className="tracking-wider font-mono">{myLobbyCode}</span></h2>
+          {duoMode && (
+            <span className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full font-semibold">
+              🥊 Дуэль
+            </span>
+          )}
           <button
             type="button"
             aria-label="Скопировать код лобби"

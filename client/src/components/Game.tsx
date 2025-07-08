@@ -26,6 +26,10 @@ interface GameProps {
   canConfirmContact: boolean;
   handleResetGame: () => void;
   contactWords: Record<string, string>;
+  players: any[];
+  showDuoModal: boolean;
+  setShowDuoModal: (v: boolean) => void;
+  handleStartDuoGame: (difficulty: 'easy' | 'medium' | 'hard') => void;
 }
 
 const Game: React.FC<GameProps & { handleRevealAll?: () => void }> = ({
@@ -55,6 +59,10 @@ const Game: React.FC<GameProps & { handleRevealAll?: () => void }> = ({
   handleResetGame,
   contactWords,
   handleRevealAll,
+  players,
+  showDuoModal,
+  setShowDuoModal,
+  handleStartDuoGame,
 }) => {
   return (
     <div>
@@ -256,6 +264,51 @@ const Game: React.FC<GameProps & { handleRevealAll?: () => void }> = ({
         >
           Открыть всё слово (завершить игру)
         </button>
+      )}
+      {/* Кнопка "Играть вдвоём" для ведущего */}
+      {isHost && !isGameStarted && players.length === 2 && (
+        <button
+          className="w-full py-2 rounded bg-purple-600 text-white font-semibold hover:bg-purple-700 transition mb-2"
+          onClick={() => setShowDuoModal(true)}
+        >
+          🥊 Играть вдвоём
+        </button>
+      )}
+      {/* Модальное окно выбора сложности */}
+      {showDuoModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
+              Выберите сложность
+            </h3>
+            <div className="space-y-3">
+              <button
+                className="w-full py-3 px-4 rounded bg-green-500 text-white font-semibold hover:bg-green-600 transition"
+                onClick={() => handleStartDuoGame('easy')}
+              >
+                🟢 Легко (3-4 буквы)
+              </button>
+              <button
+                className="w-full py-3 px-4 rounded bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition"
+                onClick={() => handleStartDuoGame('medium')}
+              >
+                🟡 Средне (5-6 букв)
+              </button>
+              <button
+                className="w-full py-3 px-4 rounded bg-red-500 text-white font-semibold hover:bg-red-600 transition"
+                onClick={() => handleStartDuoGame('hard')}
+              >
+                🔴 Сложно (7-10 букв)
+              </button>
+            </div>
+            <button
+              className="w-full mt-4 py-2 px-4 rounded bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition"
+              onClick={() => setShowDuoModal(false)}
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
