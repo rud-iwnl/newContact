@@ -286,19 +286,19 @@ const Game: React.FC<GameProps & { handleRevealAll?: () => void }> = ({
                 className="w-full py-3 px-4 rounded bg-green-500 text-white font-semibold hover:bg-green-600 transition"
                 onClick={() => handleStartDuoGame('easy')}
               >
-                🟢 Легко (3-4 буквы)
+                🟢 Легко 
               </button>
               <button
                 className="w-full py-3 px-4 rounded bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition"
                 onClick={() => handleStartDuoGame('medium')}
               >
-                🟡 Средне (5-6 букв)
+                🟡 Средне 
               </button>
               <button
                 className="w-full py-3 px-4 rounded bg-red-500 text-white font-semibold hover:bg-red-600 transition"
                 onClick={() => handleStartDuoGame('hard')}
               >
-                🔴 Сложно (7-10 букв)
+                🔴 Сложно 
               </button>
             </div>
             <button
