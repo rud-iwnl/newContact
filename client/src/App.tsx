@@ -136,6 +136,9 @@ export default function App() {
   const [showDuoModal, setShowDuoModal] = useState<boolean>(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
+  // Состояние для правил игры
+  const [showRules, setShowRules] = useState<boolean>(false);
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
@@ -622,13 +625,22 @@ export default function App() {
       <div className="w-full max-w-md p-6 rounded-xl shadow-xl bg-white dark:bg-gray-800">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Контакт</h1>
-          <button
-            aria-label="Переключить тему"
-            className="ml-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          >
-            {theme === "dark" ? "🌙" : "☀️"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="px-3 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm"
+              onClick={() => setShowRules(true)}
+            >
+              📜 Правила
+            </button>
+            <button
+              aria-label="Переключить тему"
+              className="ml-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? "🌙" : "☀️"}
+            </button>
+          </div>
         </div>
         <form className="space-y-4 min-h-[420px] flex flex-col justify-between" onSubmit={handleLobbyEnter}>
           <div>
@@ -764,6 +776,88 @@ export default function App() {
             {mode === "join" ? "Войти в лобби" : "Создать лобби"}
           </button>
         </form>
+        
+        {/* Модальное окно с правилами */}
+        {showRules && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">📜 Правила игры «Контакт»</h2>
+                  <button
+                    onClick={() => setShowRules(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="space-y-4 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">🎯 Цель игры:</h3>
+                    <p>Угадать загаданное ведущим слово, раскрывая его по буквам через «контакты».</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">🧠 1. Загадывание слова</h3>
+                    <p>Один игрок становится ведущим и загадывает слово.</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">❓ 2. Задавание вопросов</h3>
+                    <p>Остальные игроки по очереди задают вопросы, намекая на своё предположительное слово.</p>
+                    <p className="mt-2 font-semibold">Важно:</p>
+                    <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                      <li>Вопрос должен быть составлен так, чтобы ведущий не понял, о каком слове идёт речь.</li>
+                      <li>Пример: "Это бывает в небе, но не летает?" (намёк на "облако").</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">🤝 3. "Контакт!"</h3>
+                    <p>Если кто-то из игроков понял, на какое слово намекает другой, он нажимает на кнопку «Контакт!».</p>
+                    <p>После этого запускается обратный отсчёт.</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">🗣️ 4. Угадывание</h3>
+                    <p>Если оба игрока написали одно и то же слово, это считается успешным контактом.</p>
+                    <p className="mt-2 font-semibold">✅ В этом случае:</p>
+                    <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                      <li>Открывается одна новая буква загаданного слова</li>
+                      <li>Оба игрока получают по 1 баллу</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">🛑 5. «Я знаю!»</h3>
+                    <p>Перед «контактом» ведущий может попытаться сорвать его, нажав:</p>
+                    <p>«Я знаю!» — и написать предполагаемое слово игрока.</p>
+                    <p>Если он угадывает верно — контакт не засчитывается. А слово больше не используется.</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2">🏁 6. Завершение игры</h3>
+                    <p>Игра продолжается, пока:</p>
+                    <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                      <li>Все буквы загаданного слова не будут открыты</li>
+                      <li>Или слово не будет названо полностью</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => setShowRules(false)}
+                    className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                  >
+                    Понятно
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
